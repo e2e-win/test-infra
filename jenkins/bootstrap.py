@@ -962,7 +962,7 @@ def setup_root(call, root, repos, ssh, git_cache, clean):
         # for k-s/k these are different, for the rest they are the same
         # TODO(bentheelder,cjwagner,stevekuznetsov): in the integrated
         # prow checkout support remapping checkouts and kill this monstrosity
-        repo_path = repo
+        repo_path = "k8s.io/kubernetes"
         if repo == "github.com/kubernetes-security/kubernetes":
             repo_path = "k8s.io/kubernetes"
         logging.info(
