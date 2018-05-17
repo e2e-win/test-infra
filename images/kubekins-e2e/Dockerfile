@@ -15,7 +15,7 @@
 # This file creates a build environment for building and running kubernetes
 # unit and integration tests
 
-FROM gcr.io/k8s-testimages/bootstrap:v20180730-c3257f6c0
+FROM gcr.io/win-e2e-test/bootstrap:latest
 LABEL maintainer "Sen Lu <senlu@google.com>"
 
 # hint to kubetest that it is in CI
@@ -68,7 +68,6 @@ RUN INSTALLER="bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh"; \
 # add env we can debug with the image name:tag
 ARG IMAGE_ARG
 ENV IMAGE=${IMAGE_ARG}
-
 # everything below will be triggered on every new image tag ...
 ADD ["kops-e2e-runner.sh", \
     "kubetest", \

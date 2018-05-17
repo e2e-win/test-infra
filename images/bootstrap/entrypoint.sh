@@ -18,12 +18,15 @@ set -o nounset
 set -o pipefail
 
 # get test-infra for latest bootstrap etc
-git clone https://github.com/kubernetes/test-infra
+git clone https://github.com/e2e-win/test-infra
+git fetch
+git checkout bootstrap_changes
+git branch
 
 # actually start bootstrap and the job, under the runner (which handles dind etc.)
 /usr/local/bin/runner.sh \
     ./test-infra/jenkins/bootstrap.py \
         --job="${JOB_NAME}" \
         --service-account="${GOOGLE_APPLICATION_CREDENTIALS}" \
-        --upload='gs://kubernetes-jenkins/logs' \
+        --upload='gs://win-e2e-test/logs' \
         "$@"

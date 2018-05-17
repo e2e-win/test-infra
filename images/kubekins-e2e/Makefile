@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-IMG = gcr.io/k8s-testimages/kubekins-e2e
-TAG := $(shell date +v%Y%m%d)-$(shell git describe --tags --always --dirty)
+IMG = gcr.io/win-e2e-test/kubekins-e2e
+#TAG := $(shell date +v%Y%m%d)-$(shell git describe --tags --always --dirty)
+TAG = latest
 
 # kubernetes master branch config
 K8S ?= master
@@ -59,7 +60,7 @@ endif
 all: build
 
 kubetest:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o kubetest ../../kubetest
+	wget https://k8swin.blob.core.windows.net/k8s-windows/testing/kubetest/kubetest_latest/kubetest
 
 build: kubetest
 	@echo Building with go:$(GO) and bazel:$(BAZEL)

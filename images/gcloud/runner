@@ -17,7 +17,11 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-git clone https://github.com/kubernetes/test-infra
+git clone https://github.com/e2e-win/test-infra
+git fetch
+git checkout bootstrap_changes
+git branch
+ 
 ./test-infra/jenkins/bootstrap.py \
     --job=${JOB_NAME} \
     --service-account=${GOOGLE_APPLICATION_CREDENTIALS} \
