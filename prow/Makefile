@@ -62,7 +62,7 @@ ZONE          ?= us-central1-f
 CLUSTER       ?= prow
 
 # Build and push specific variables.
-REGISTRY ?= gcr.io
+REGISTRY ?= papagalu
 PUSH     ?= docker push
 
 DOCKER_LABELS:=--label io.k8s.prow.git-describe="$(shell git describe --tags --always --dirty)"
@@ -93,12 +93,12 @@ test:
 .PHONY: build test get-cluster-credentials
 
 alpine-image:
-	docker build -t "$(REGISTRY)/$(PROJECT)/alpine:$(ALPINE_VERSION)" $(DOCKER_LABELS) cmd/images/alpine
-	$(PUSH) "$(REGISTRY)/$(PROJECT)/alpine:$(ALPINE_VERSION)"
+	docker build -t "$(REGISTRY)/alpine:$(ALPINE_VERSION)" $(DOCKER_LABELS) cmd/images/alpine
+	$(PUSH) "$(REGISTRY)/alpine:$(ALPINE_VERSION)"
 
 git-image: alpine-image
-	docker build -t "$(REGISTRY)/$(PROJECT)/git:$(GIT_VERSION)" $(DOCKER_LABELS) cmd/images/git
-	$(PUSH) "$(REGISTRY)/$(PROJECT)/git:$(GIT_VERSION)"
+	docker build -t "$(REGISTRY)/git:$(GIT_VERSION)" $(DOCKER_LABELS) cmd/images/git
+	$(PUSH) "$(REGISTRY)/git:$(GIT_VERSION)"
 
 .PHONY: alpine-image git-image
 
@@ -113,8 +113,8 @@ branchprotector-cronjob: get-cluster-credentials
 
 hook-image: git-image
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o cmd/hook/hook k8s.io/test-infra/prow/cmd/hook
-	docker build -t "$(REGISTRY)/$(PROJECT)/hook:$(HOOK_VERSION)" $(DOCKER_LABELS) cmd/hook
-	$(PUSH) "$(REGISTRY)/$(PROJECT)/hook:$(HOOK_VERSION)"
+	docker build -t "$(REGISTRY)/hook:$(HOOK_VERSION)" $(DOCKER_LABELS) cmd/hook
+	$(PUSH) "$(REGISTRY)/hook:$(HOOK_VERSION)"
 
 hook-deployment: get-cluster-credentials
 	kubectl apply -f cluster/hook_deployment.yaml
