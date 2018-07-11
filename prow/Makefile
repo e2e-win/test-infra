@@ -17,6 +17,8 @@
 all: build test
 
 
+
+
 # ALPINE_VERSION is the version of the alpine image
 ALPINE_VERSION           ?= 0.1
 # GIT_VERSION is the version of the alpine+git image
