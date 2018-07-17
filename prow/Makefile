@@ -1,23 +1,36 @@
 # Copyright 2016 The Kubernetes Authors.
 #
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
+#
 # you may not use this file except in compliance with the License.
+#
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
+#
 # distributed under the License is distributed on an "AS IS" BASIS,
+#
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#
 # See the License for the specific language governing permissions and
+#
 # limitations under the License.
+
+
 
 all: build test
 
 
+
 # ALPINE_VERSION is the version of the alpine image
+#
 ALPINE_VERSION           ?= 0.1
+
 # GIT_VERSION is the version of the alpine+git image
+#
 GIT_VERSION              ?= 0.2
 
 # YYYYmmdd-commitish
@@ -62,7 +75,7 @@ ZONE          ?= us-central1-f
 CLUSTER       ?= prow
 
 # Build and push specific variables.
-REGISTRY ?= gcr.io
+REGISTRY ?= papagalu
 PUSH     ?= docker push
 
 DOCKER_LABELS:=--label io.k8s.prow.git-describe="$(shell git describe --tags --always --dirty)"
@@ -93,12 +106,12 @@ test:
 .PHONY: build test get-cluster-credentials
 
 alpine-image:
-	docker build -t "$(REGISTRY)/$(PROJECT)/alpine:$(ALPINE_VERSION)" $(DOCKER_LABELS) cmd/images/alpine
-	$(PUSH) "$(REGISTRY)/$(PROJECT)/alpine:$(ALPINE_VERSION)"
+	docker build -t "$(REGISTRY)/alpine:$(ALPINE_VERSION)" $(DOCKER_LABELS) cmd/images/alpine
+	$(PUSH) "$(REGISTRY)/alpine:$(ALPINE_VERSION)"
 
 git-image: alpine-image
-	docker build -t "$(REGISTRY)/$(PROJECT)/git:$(GIT_VERSION)" $(DOCKER_LABELS) cmd/images/git
-	$(PUSH) "$(REGISTRY)/$(PROJECT)/git:$(GIT_VERSION)"
+	docker build -t "$(REGISTRY)/git:$(GIT_VERSION)" $(DOCKER_LABELS) cmd/images/git
+	$(PUSH) "$(REGISTRY)/git:$(GIT_VERSION)"
 
 .PHONY: alpine-image git-image
 
@@ -113,8 +126,8 @@ branchprotector-cronjob: get-cluster-credentials
 
 hook-image: git-image
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o cmd/hook/hook k8s.io/test-infra/prow/cmd/hook
-	docker build -t "$(REGISTRY)/$(PROJECT)/hook:$(HOOK_VERSION)" $(DOCKER_LABELS) cmd/hook
-	$(PUSH) "$(REGISTRY)/$(PROJECT)/hook:$(HOOK_VERSION)"
+	docker build -t "$(REGISTRY)/hook:$(HOOK_VERSION)" $(DOCKER_LABELS) cmd/hook
+	$(PUSH) "$(REGISTRY)/hook:$(HOOK_VERSION)"
 
 hook-deployment: get-cluster-credentials
 	kubectl apply -f cluster/hook_deployment.yaml

@@ -24,6 +24,7 @@ import (
 
 func handlePE(c client, pe github.PushEvent) error {
 	for _, j := range c.Config.Postsubmits[pe.Repo.FullName] {
+		c.Logger.Info("OMG I'M INSIDE THE PLUGIN")
 		if !j.RunsAgainstBranch(pe.Branch()) {
 			continue
 		}
