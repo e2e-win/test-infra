@@ -60,6 +60,7 @@ var (
 	acsCredentialsFile     = flag.String("acsengine-creds", "", "Path to credential file for Azure")
 	acsOrchestratorRelease = flag.String("acsengine-orchestratorRelease", "1.11", "Orchestrator Profile for acs-engine")
 	acsWinZipBuildScript   = flag.String("acsengine-winZipBuildScript", "https://raw.githubusercontent.com/Azure/acs-engine/master/scripts/build-windows-k8s.sh", "Build script to create custom zip containing win binaries for acs-engine")
+	acsNetworkPlugin       = flag.String("acsengine-networkPlugin", "azure", "Network pluging to use with acs-engine")
 )
 
 type Creds struct {
@@ -190,7 +191,9 @@ func (c *Cluster) generateTemplate() error {
 			OrchestratorProfile: &OrchestratorProfile{
 				OrchestratorType:    "Kubernetes",
 				OrchestratorRelease: *acsOrchestratorRelease,
-				KubernetesConfig:    &KubernetesConfig{},
+				KubernetesConfig: &KubernetesConfig{
+					NetworkPlugin: *acsNetworkPlugin,
+				},
 			},
 			MasterProfile: &MasterProfile{
 				Count:     1,
