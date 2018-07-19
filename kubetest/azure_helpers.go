@@ -79,9 +79,10 @@ type OrchestratorProfile struct {
 }
 
 type MasterProfile struct {
-	Count     int    `json:"count"`
-	DNSPrefix string `json:"dnsPrefix"`
-	VMSize    string `json:"vmSize" validate:"required"`
+	Count          int    `json:"count"`
+	DNSPrefix      string `json:"dnsPrefix"`
+	VMSize         string `json:"vmSize" validate:"required"`
+	IPAddressCount int    `json:"ipAddressCount,omitempty"`
 }
 
 type AgentPoolProfile struct {
@@ -90,6 +91,7 @@ type AgentPoolProfile struct {
 	VMSize              string `json:"vmSize"`
 	OSType              string `json:"osType,omitempty"`
 	AvailabilityProfile string `json:"availabilityProfile"`
+	IPAddressCount      int    `json:"ipAddressCount,omitempty"`
 }
 
 type AzureClient struct {

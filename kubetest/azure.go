@@ -196,9 +196,10 @@ func (c *Cluster) generateTemplate() error {
 				},
 			},
 			MasterProfile: &MasterProfile{
-				Count:     1,
-				DNSPrefix: c.dnsPrefix,
-				VMSize:    *acsMasterVmSize,
+				Count:          1,
+				DNSPrefix:      c.dnsPrefix,
+				VMSize:         *acsMasterVmSize,
+				IPAddressCount: 200,
 			},
 			AgentPoolProfiles: []*AgentPoolProfile{
 				{
@@ -207,6 +208,7 @@ func (c *Cluster) generateTemplate() error {
 					Count:               *acsAgentPoolCount,
 					OSType:              *acsAgentOSType,
 					AvailabilityProfile: "AvailabilitySet",
+					IPAddressCount:      200,
 				},
 			},
 			LinuxProfile: &LinuxProfile{
