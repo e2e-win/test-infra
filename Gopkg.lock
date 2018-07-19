@@ -29,11 +29,11 @@
 [[projects]]
   name = "github.com/Azure/azure-sdk-for-go"
   packages = [
-    "services/resources/mgmt/2017-05-10/resources",
+    "services/resources/mgmt/2018-05-01/resources",
     "version",
   ]
-  revision = "4650843026a7fdec254a8d9cf893693a254edd0b"
-  version = "v16.2.1"
+  revision = "34e80a61f817f18afd85d0c6d12ee6400d6506b2"
+  version = "v18.1.0"
 
 [[projects]]
   name = "github.com/Azure/azure-storage-blob-go"
@@ -51,8 +51,8 @@
     "autorest/to",
     "autorest/validation",
   ]
-  revision = "eaa7994b2278094c904d31993d26f56324db3052"
-  version = "v10.8.1"
+  revision = "894522ed0d5cab8d143c39116ddc5f605a1931ee"
+  version = "v10.13.0"
 
 [[projects]]
   branch = "parse-constraints-with-dash-in-pre"
@@ -1049,6 +1049,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "32621746966b62a75dd5011296c592a16295e30f09176010a0e34fbbe640bc41"
+  inputs-digest = "10a4ed332f462f93de2eb5402091b0a869c99d2e6635747d5d6bd59af89dece9"
   solver-name = "gps-cdcl"
   solver-version = 1
