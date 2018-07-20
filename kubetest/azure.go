@@ -256,7 +256,7 @@ func (c *Cluster) generateTemplate() error {
 	} else if c.acsCustomWinBinariesURL != "" {
 		v.Properties.OrchestratorProfile.KubernetesConfig.CustomWindowsPackageURL = c.acsCustomWinBinariesURL
 	}
-	apiModel, _ := json.Marshal(v)
+	apiModel, _ := json.MarshalIndent(v, "", "  ")
 	c.apiModelPath = path.Join(c.outputDir, "kubernetes.json")
 	err := ioutil.WriteFile(c.apiModelPath, apiModel, 0644)
 	if err != nil {
