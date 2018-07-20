@@ -69,9 +69,10 @@ type WindowsProfile struct {
 }
 
 type KubernetesConfig struct {
-	CustomWindowsPackageURL string `json:"customWindowsPackageURL,omitempty"`
-	CustomHyperkubeImage    string `json:"customHyperkubeImage,omitempty"`
-	NetworkPlugin           string `json:"networkPlugin,omitempty"`
+	CustomWindowsPackageURL string            `json:"customWindowsPackageURL,omitempty"`
+	CustomHyperkubeImage    string            `json:"customHyperkubeImage,omitempty"`
+	NetworkPlugin           string            `json:"networkPlugin,omitempty"`
+	KubeletConfig           map[string]string `json:"kubeletConfig,omitempty"`
 }
 type OrchestratorProfile struct {
 	OrchestratorType    string            `json:"orchestratorType"`

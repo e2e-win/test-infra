@@ -193,6 +193,9 @@ func (c *Cluster) generateTemplate() error {
 				OrchestratorRelease: *acsOrchestratorRelease,
 				KubernetesConfig: &KubernetesConfig{
 					NetworkPlugin: *acsNetworkPlugin,
+					KubeletConfig: map[string]string{
+						"--register-with-taints": "node-role.kubernetes.io/master=true:NoSchedule",
+					},
 				},
 			},
 			MasterProfile: &MasterProfile{
