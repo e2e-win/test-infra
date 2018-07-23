@@ -213,6 +213,11 @@ func (c *Cluster) generateTemplate() error {
 						"name":        "node_setup",
 						"singleOrAll": "all",
 					},
+					Extensions: []map[string]string{
+						{
+							"name": "winrm",
+						},
+					},
 				},
 			},
 			LinuxProfile: &LinuxProfile{
@@ -238,6 +243,10 @@ func (c *Cluster) generateTemplate() error {
 					"version": "v1",
 					"rootURL": "https://k8swin.blob.core.windows.net/k8s-windows/preprovision_extensions/",
 					"script":  "node_setup.ps1",
+				},
+				{
+					"name":    "winrm",
+					"version": "v1",
 				},
 			},
 		},
