@@ -200,6 +200,11 @@ func (c *Cluster) generateTemplate() error {
 				DNSPrefix:      c.dnsPrefix,
 				VMSize:         *acsMasterVmSize,
 				IPAddressCount: 200,
+				Extensions: []map[string]string{
+					{
+						"name": "win-e2e-master-extension",
+					},
+				},
 			},
 			AgentPoolProfiles: []*AgentPoolProfile{
 				{
@@ -247,6 +252,13 @@ func (c *Cluster) generateTemplate() error {
 				{
 					"name":    "winrm",
 					"version": "v1",
+				},
+				{
+					"name":                "win-e2e-master-extension",
+					"version":             "v1",
+					"extensionParameters": "parameters",
+					"rootURL":             "https://k8swin.blob.core.windows.net/k8s-windows/extensions/",
+					"script":              "win-e2e-master-extension.sh",
 				},
 			},
 		},
