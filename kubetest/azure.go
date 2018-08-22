@@ -200,11 +200,6 @@ func (c *Cluster) generateTemplate() error {
 				DNSPrefix:      c.dnsPrefix,
 				VMSize:         *acsMasterVmSize,
 				IPAddressCount: 200,
-				Extensions: []map[string]string{
-					{
-						"name": "win-e2e-master-extension",
-					},
-				},
 			},
 			AgentPoolProfiles: []*AgentPoolProfile{
 				{
@@ -214,15 +209,6 @@ func (c *Cluster) generateTemplate() error {
 					OSType:              *acsAgentOSType,
 					AvailabilityProfile: "AvailabilitySet",
 					IPAddressCount:      200,
-					PreProvisionExtension: map[string]string{
-						"name":        "node_setup",
-						"singleOrAll": "all",
-					},
-					Extensions: []map[string]string{
-						{
-							"name": "winrm",
-						},
-					},
 				},
 			},
 			LinuxProfile: &LinuxProfile{
@@ -234,34 +220,46 @@ func (c *Cluster) generateTemplate() error {
 					},
 				},
 			},
-			WindowsProfile: &WindowsProfile{
-				AdminUsername: *acsAdminUsername,
-				AdminPassword: *acsAdminPassword,
-			},
 			ServicePrincipalProfile: &ServicePrincipalProfile{
 				ClientID: c.credentials.ClientID,
 				Secret:   c.credentials.ClientSecret,
 			},
-			ExtensionProfiles: []map[string]string{
-				{
-					"name":    "node_setup",
-					"version": "v1",
-					"rootURL": "https://k8swin.blob.core.windows.net/k8s-windows/preprovision_extensions/",
-					"script":  "node_setup.ps1",
-				},
-				{
-					"name":    "winrm",
-					"version": "v1",
-				},
-				{
-					"name":                "win-e2e-master-extension",
-					"version":             "v1",
-					"extensionParameters": "parameters",
-					"rootURL":             "https://k8swin.blob.core.windows.net/k8s-windows/extensions/",
-					"script":              "win-e2e-master-extension.sh",
-				},
-			},
 		},
+	}
+	if *acsAgentOSType == "Windows" {
+		v.Properties.MasterProfile.Extensions = []map[string]string{{"name": "win-e2e-master-extension"}}
+		v.Properties.AgentPoolProfiles[0].PreProvisionExtension = map[string]string{
+			"name":        "node_setup",
+			"singleOrAll": "all",
+		}
+		v.Properties.AgentPoolProfiles[0].Extensions = []map[string]string{
+			{
+				"name": "winrm",
+			},
+		}
+		v.Properties.WindowsProfile = &WindowsProfile{
+			AdminUsername: *acsAdminUsername,
+			AdminPassword: *acsAdminPassword,
+		}
+		v.Properties.ExtensionProfiles = []map[string]string{
+			{
+				"name":    "node_setup",
+				"version": "v1",
+				"rootURL": "https://k8swin.blob.core.windows.net/k8s-windows/preprovision_extensions/",
+				"script":  "node_setup.ps1",
+			},
+			{
+				"name":    "winrm",
+				"version": "v1",
+			},
+			{
+				"name":                "win-e2e-master-extension",
+				"version":             "v1",
+				"extensionParameters": "parameters",
+				"rootURL":             "https://k8swin.blob.core.windows.net/k8s-windows/extensions/",
+				"script":              "win-e2e-master-extension.sh",
+			},
+		}
 	}
 	if *acsHyperKubeURL != "" {
 		v.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = *acsHyperKubeURL
