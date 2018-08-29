@@ -573,6 +573,8 @@ def main(args):
     elif args.deployment == 'kops' and args.provider == 'gce':
         set_up_kops_gce(mode.workspace, args, mode, cluster, runner_args)
     elif args.gce_ssh:
+        print args.gce_ssh
+        print len(args.gce_ssh)
         mode.add_gce_ssh(args.gce_ssh, args.gce_pub)
 
     # TODO(fejta): delete this?

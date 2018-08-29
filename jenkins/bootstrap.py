@@ -812,14 +812,14 @@ def setup_magic_environment(job, call):
     # TODO(fejta): jenkins sets these values. Consider migrating to using
     #              a secret volume instead and passing the path to this volume
     #              into bootstrap.py as a flag.
-    os.environ.setdefault(
-        GCE_KEY_ENV,
-        os.path.join(home, '.ssh/google_compute_engine'),
-    )
-    os.environ.setdefault(
-        'JENKINS_GCE_SSH_PUBLIC_KEY_FILE',
-        os.path.join(home, '.ssh/google_compute_engine.pub'),
-    )
+    # os.environ.setdefault(
+    #     GCE_KEY_ENV,
+    #     os.path.join(home, '.ssh/google_compute_engine'),
+    # )
+    #os.environ.setdefault(
+    #    'JENKINS_GCE_SSH_PUBLIC_KEY_FILE',
+    #    os.path.join(home, '.ssh/google_compute_engine.pub'),
+    #)
     os.environ.setdefault(
         'JENKINS_AWS_SSH_PRIVATE_KEY_FILE',
         os.path.join(home, '.ssh/kube_aws_rsa'),
