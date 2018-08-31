@@ -167,6 +167,7 @@ func newAcsEngine() (*Cluster, error) {
 		acsCustomWinBinariesURL: "",
 		acsEngineBinaryPath:     "acs-engine", // use the one in path by default
 	}
+	c.apiModelPath = path.Join(c.outputDir, "kubernetes.json")
 	c.getAzCredentials()
 	err = c.getARMClient(c.ctx)
 	if err != nil {
@@ -279,11 +280,9 @@ func (c *Cluster) generateTemplate() error {
 	} else if c.acsCustomWinBinariesURL != "" {
 		v.Properties.OrchestratorProfile.KubernetesConfig.CustomWindowsPackageURL = c.acsCustomWinBinariesURL
 	}
-	apiModel, _ := json.MarshalIndent(v, "", "  ")
-	c.apiModelPath = path.Join(c.outputDir, "kubernetes.json")
-	err := ioutil.WriteFile(c.apiModelPath, apiModel, 0644)
+	err := v.writeAcsModel(c.apiModelPath)
 	if err != nil {
-		return fmt.Errorf("Cannot write to file: %v", err)
+		return err
 	}
 	return nil
 }
@@ -509,11 +508,9 @@ func (c Cluster) Up() error {
 			return fmt.Errorf("Problem building windowsZipFile %v", err)
 		}
 	}
-	if c.apiModelPath == "" {
-		err = c.generateTemplate()
-		if err != nil {
-			return fmt.Errorf("Failed to generate apiModel: %v", err)
-		}
+	err = c.generateTemplate()
+	if err != nil {
+		return fmt.Errorf("Failed to generate apiModel: %v", err)
 	}
 	if *acsEngineURL != "" {
 		err = c.getAcsEngine(2)
@@ -622,6 +619,19 @@ wrapper-scp -r azureuser@%[2]s:/tmp/out/ %[3]s
 		log.Printf("Couldn't find ssh private key at %s, no windows logging done.", privateSSHKey)
 		return nil
 	}
+
+	//read json and unmarshal ita
+	f, err := ioutil.ReadFile(c.apiModelPath)
+	if err != nil {
+		return fmt.Errorf("Couldn't read kubernetes.json")
+	}
+	var a AcsEngineApiModel
+	json.Unmarshal(f, &a)
+	a.Properties.ServicePrincipalProfile = nil
+	a.Properties.LinuxProfile = nil
+	a.Properties.WindowsProfile = nil
+	p := path.Join(localPath, "kubernetes-censored.json")
+	a.writeAcsModel(p)
 
 	return control.FinishRunning(exec.Command("bash", "-c", fmt.Sprintf(AzureLogDumpTemplate,
 		privateSSHKey,

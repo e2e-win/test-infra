@@ -18,7 +18,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	resources "github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
@@ -217,4 +219,14 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armSpt *a
 	c.groupsClient.Authorizer = authorizer
 
 	return c
+}
+
+func (a *AcsEngineApiModel) writeAcsModel(path string) error {
+	apiModel, _ := json.MarshalIndent(a, "", "  ")
+	err := ioutil.WriteFile(path, apiModel, 0644)
+	if err != nil {
+		fmt.Errorf("Cannot write to file: %v", err)
+		return err
+	}
+	return nil
 }
