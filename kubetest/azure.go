@@ -92,6 +92,7 @@ type Cluster struct {
 	adminPassword           string
 	masterVMSize            string
 	agentVMSize             string
+	masterDNSName           string
 	acsCustomHyperKubeURL   string
 	acsCustomWinBinariesURL string
 	acsEngineBinaryPath     string
@@ -148,6 +149,7 @@ func newAcsEngine() (*Cluster, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error reading SSH Key %v %v", *acsSSHPublicKeyPath, err)
 	}
+	var masterDNSTemplate = "%s.%s.cloudapp.azure.com"
 	c := Cluster{
 		ctx:                     context.Background(),
 		apiModelPath:            *acsTemplatePath,
@@ -155,13 +157,17 @@ func newAcsEngine() (*Cluster, error) {
 		dnsPrefix:               *acsDnsPrefix,
 		location:                *acsLocation,
 		resourceGroup:           *acsResourceGroupName,
+		adminUsername:           *acsAdminUsername,
+		adminPassword:           *acsAdminPassword,
 		outputDir:               tempdir,
 		sshPublicKey:            fmt.Sprintf("%s", sshKey),
 		credentials:             &Creds{},
+		masterDNSName:           fmt.Sprintf(masterDNSTemplate, *acsDnsPrefix, *acsLocation),
 		acsCustomHyperKubeURL:   "",
 		acsCustomWinBinariesURL: "",
 		acsEngineBinaryPath:     "acs-engine", // use the one in path by default
 	}
+	c.apiModelPath = path.Join(c.outputDir, "kubernetes.json")
 	c.getAzCredentials()
 	err = c.getARMClient(c.ctx)
 	if err != nil {
@@ -272,11 +278,9 @@ func (c *Cluster) generateTemplate() error {
 	} else if c.acsCustomWinBinariesURL != "" {
 		v.Properties.OrchestratorProfile.KubernetesConfig.CustomWindowsPackageURL = c.acsCustomWinBinariesURL
 	}
-	apiModel, _ := json.MarshalIndent(v, "", "  ")
-	c.apiModelPath = path.Join(c.outputDir, "kubernetes.json")
-	err := ioutil.WriteFile(c.apiModelPath, apiModel, 0644)
+	err := v.writeAcsModel(c.apiModelPath)
 	if err != nil {
-		return fmt.Errorf("Cannot write to file: %v", err)
+		return err
 	}
 	return nil
 }
@@ -502,11 +506,9 @@ func (c Cluster) Up() error {
 			return fmt.Errorf("Problem building windowsZipFile %v", err)
 		}
 	}
-	if c.apiModelPath == "" {
-		err = c.generateTemplate()
-		if err != nil {
-			return fmt.Errorf("Failed to generate apiModel: %v", err)
-		}
+	err = c.generateTemplate()
+	if err != nil {
+		return fmt.Errorf("Failed to generate apiModel: %v", err)
 	}
 	if *acsEngineURL != "" {
 		err = c.getAcsEngine(2)
@@ -535,7 +537,107 @@ func (c Cluster) Down() error {
 }
 
 func (c Cluster) DumpClusterLogs(localPath, gcsPath string) error {
-	return nil
+	// should run on master node and collect logs through winrm from windows slaves
+
+	// will let this script as it is to be easier to be moved into kubernetes/cluster/log-dump/
+	const masterLogDumpScriptTemplate = `#!/bin/bash
+
+set -x
+set -e
+
+set -o pipefail
+
+function install_pwsh () {
+	#curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+	#sudo curl -o /etc/apt/sources.list.d/microsoft.list https://packages.microsoft.com/config/ubuntu/16.04/prod.list
+    sudo apt-get update
+    sudo apt-get install powershell -y
+}
+
+function collect_logs () {
+    local user="$1"; shift
+    local pass="$1"; shift
+    local output="$1"
+
+    mkdir -p $output
+
+    git clone https://github.com/papagalu/logslurp
+    pushd "logslurp"
+        git checkout customize_logslurp_p
+        pwsh logslurp.ps1 -win_user "$user" -win_pass "$pass" -OutputFolder "$output"
+    popd
+}
+
+function main () {
+
+    TEMP=$(getopt -o u:p:o: --long user:,pass:,output: -n 'master.sh' -- "$@")
+    if [[ $? -ne 0 ]]; then
+        exit 1
+    fi
+
+    echo $TEMP
+    eval set -- "$TEMP"
+
+    while true ; do
+        case "$1" in
+            --user)
+                user="$2"; shift 2;;
+            --pass)
+                pass="$2"; shift 2;;
+            --output)
+                output="$2"; shift 2;;
+            --) shift ; break ;;
+        esac
+    done
+
+    install_pwsh
+    collect_logs "$user" "$pass" "$output"
+}
+
+main "$@"`
+
+	const AzureLogDumpTemplate = `
+function wrapper-ssh () {
+	ssh -i %[1]s -o StrictHostKeyChecking=no "$@"
+}
+function wrapper-scp () {
+	scp -i %[1]s -o StrictHostKeyChecking=no "$@"
+}
+echo '%[6]s' > master.sh
+wrapper-ssh %[4]s@%[2]s 'cat | bash /dev/stdin --user %[4]s --pass %[5]s --output /tmp/out' < master.sh
+wrapper-scp -r azureuser@%[2]s:/tmp/out/ %[3]s
+`
+	if strings.Contains(localPath, "'") || strings.Contains(gcsPath, "'") {
+		return fmt.Errorf("%q or %q contain single quotes - nice try", localPath, gcsPath)
+	}
+
+	var privateSSHKey string
+	privateSSHKey = strings.TrimSuffix(*acsSSHPublicKeyPath, ".pub")
+	if privateSSHKey == *acsSSHPublicKeyPath {
+		log.Printf("Couldn't find ssh private key at %s, no windows logging done.", privateSSHKey)
+		return nil
+	}
+
+	//read json and unmarshal ita
+	f, err := ioutil.ReadFile(c.apiModelPath)
+	if err != nil {
+		return fmt.Errorf("Couldn't read kubernetes.json")
+	}
+	var a AcsEngineApiModel
+	json.Unmarshal(f, &a)
+	a.Properties.ServicePrincipalProfile = nil
+	a.Properties.LinuxProfile = nil
+	a.Properties.WindowsProfile = nil
+	p := path.Join(localPath, "kubernetes-censored.json")
+	a.writeAcsModel(p)
+
+	return control.FinishRunning(exec.Command("bash", "-c", fmt.Sprintf(AzureLogDumpTemplate,
+		privateSSHKey,
+		c.masterDNSName,
+		localPath,
+		c.adminUsername,
+		c.adminPassword,
+		masterLogDumpScriptTemplate)))
 }
 
 func (c Cluster) GetClusterCreated(clusterName string) (time.Time, error) {
