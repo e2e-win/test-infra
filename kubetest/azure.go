@@ -33,6 +33,7 @@ import (
 	"time"
 
 	"github.com/pelletier/go-toml"
+	"k8s.io/test-infra/kubetest/util"
 
 	"github.com/Azure/azure-storage-blob-go/2016-05-31/azblob"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -411,8 +412,14 @@ func (c *Cluster) buildHyperKube() error {
 
 	cwd, _ := os.Getwd()
 	log.Printf("CWD %v", cwd)
-	if err := control.FinishRunning(exec.Command("hack/dev-push-hyperkube.sh")); err != nil {
+	log.Printf("Attempt docker gcloud login")
+	prepareDocker := util.K8s("gcloud", "auth", "configure-docker")
+	if err := control.FinishRunning(exec.Command(prepareDocker)); err != nil {
 		return err
+	}
+	pushHyperkube := util.K8s("kubernetes", "hack", "dev-push-hyperkube.sh")
+	if err1 := control.FinishRunning(exec.Command(pushHyperkube)); err1 != nil {
+		return err1
 	}
 	c.acsCustomHyperKubeURL = fmt.Sprintf("%s/hyperkube-amd64:%s", os.Getenv("REGISTRY"), os.Getenv("VERSION"))
 
